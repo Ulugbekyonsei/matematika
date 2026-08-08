@@ -682,8 +682,9 @@ body {
   display: inline-block;
   vertical-align: baseline;      /* keeps the underline on the equation's baseline */
   min-width: 2.2em;
-  line-height: 1.15;
-  margin-left: 8px;
+  line-height: 1;
+  padding-bottom: 4px;
+  margin: 0 6px;
   text-align: center;
   font-size: inherit;
   font-weight: 700;
@@ -985,6 +986,150 @@ body {
 .choice-btn:disabled { cursor: default; }
 .choice-btn.ok { background: rgba(16, 185, 129, 0.15); border-color: var(--accent-green); color: #047857; }
 .choice-btn.bad { background: rgba(239, 68, 68, 0.12); border-color: #ef4444; color: #b91c1c; }
+
+/* ---------- match pairs ---------- */
+
+/* Four across, as the book prints the table. */
+.match-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.match-cell {
+  font-family: inherit;
+  font-size: clamp(0.82rem, 3.2vw, 1rem);
+  white-space: nowrap;
+  font-weight: 600;
+  color: var(--text-dark);
+  background: #fff;
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 14px 4px;
+  cursor: pointer;
+  transition: transform 0.1s ease, background 0.15s ease;
+}
+
+.match-cell:active { transform: scale(0.95); }
+.match-cell.sel { background: #eef2ff; border-color: var(--primary); transform: scale(0.96); }
+.match-cell.ok {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: var(--accent-green);
+  color: #047857;
+  cursor: default;
+}
+.match-cell.bad { background: rgba(239, 68, 68, 0.12); border-color: #ef4444; }
+
+.match-count { font-size: 0.9rem; font-weight: 600; color: var(--text-muted); }
+
+/* ---------- ordering ---------- */
+
+.order-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  min-height: 44px;
+  padding: 8px;
+  margin-bottom: 14px;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 12px;
+}
+
+.order-placed {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #fff;
+  background: var(--accent-green);
+  border-radius: 8px;
+  padding: 5px 9px;
+}
+
+.order-pool {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(64px, 1fr));
+  gap: 8px;
+}
+
+.order-chip {
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-dark);
+  background: #fff;
+  border: 2px solid rgba(99, 102, 241, 0.2);
+  border-radius: 12px;
+  padding: 14px 4px;
+  cursor: pointer;
+  transition: transform 0.1s ease;
+}
+
+.order-chip:active { transform: scale(0.94); }
+.order-chip.ok { opacity: 0.3; cursor: default; }
+.order-chip.bad { background: rgba(239, 68, 68, 0.12); border-color: #ef4444; animation: shake 0.35s; }
+
+/* ---------- figure helpers ---------- */
+
+.fig-row {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+  flex-wrap: wrap;
+  gap: 14px;
+}
+
+.fig-cell { display: flex; align-items: flex-start; gap: 3px; }
+.fig-cell .fig { width: 74px; }
+.fig-no { font-size: 0.8rem; color: var(--text-muted); }
+
+.fig-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+}
+
+.fig-table th, .fig-table td {
+  border: 2px solid rgba(56, 189, 248, 0.55);
+  padding: 10px 6px;
+  text-align: center;
+}
+
+.fig-table th { background: rgba(56, 189, 248, 0.16); font-weight: 600; }
+
+.crate-row { display: flex; justify-content: center; gap: 20px; flex-wrap: wrap; }
+.crate { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+
+.crate-box {
+  font-size: 1.3rem;
+  line-height: 1.35;
+  max-width: 110px;
+  background: #fdf0d5;
+  border: 2px solid #c98a1e;
+  border-radius: 10px;
+  padding: 8px 10px;
+}
+
+.crate-label { font-size: 0.9rem; color: var(--text-dark); }
+
+.method-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+
+.method {
+  flex: 1 1 150px;
+  background: rgba(99, 102, 241, 0.06);
+  border-radius: 14px;
+  padding: 14px 10px;
+}
+
+.method-head {
+  font-size: 1.15rem;
+  font-weight: 700;
+  border-bottom: 2px solid var(--secondary);
+  padding-bottom: 6px;
+  margin-bottom: 8px;
+}
+
+.method-line, .namuna-line { font-size: 1rem; font-weight: 500; line-height: 1.7; }
 
 .feedback .why {
   display: block;

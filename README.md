@@ -15,7 +15,7 @@ exercises that restarts at 1**, and a block straddles page boundaries.
 | Exercise blocks in the book | **159** |
 | Total exercises | **1,101** |
 | Exercises per block | ~7 |
-| Built so far | **2** (pages 3–5) |
+| Built so far | **5** (pages 3–9) |
 
 ## Design decisions
 
@@ -32,10 +32,19 @@ exercises that restarts at 1**, and a block straddles page boundaries.
 ## Exercise types
 
 `namuna` · `compute` · `fill-blank` · `word-problem` · `neighbours` ·
-`choice` · `count-figures` · `self-check`
+`choice` · `count-figures` · `self-check` · `match-pairs` · `order` ·
+`shapes-sides`
 
 Each is a self-contained renderer, so further lessons are pure JSON in
 `lib/lessons.js`. Types repeat heavily after the first dozen lessons.
+
+`fill-blank` takes `_` anywhere in the expression, so `59 − _ = 50` works as
+well as `57 = 50 +`.
+
+**Keypad width is derived per exercise from its widest answer.** Never hardcode
+it: lesson 1 has `60 + 40 = 100` and lesson 5 asks for the number after 99.
+A guard for this is worth re-running after adding lessons —
+every numeric step's answer must fit its `maxDigits`.
 
 ## Layout
 
