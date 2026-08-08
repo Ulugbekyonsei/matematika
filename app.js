@@ -14,11 +14,12 @@ const CARD_GRADIENTS = {
   9: 'linear-gradient(135deg, #14b8a6, #0d9488)'
 };
 
-const VIEWS = ['Home', 'Table', 'Learn', 'Practice', 'Summary'];
+const VIEWS = ['Home', 'Lesson', 'Tables', 'Table', 'Learn', 'Practice', 'Summary'];
 
 let t = STRINGS[Store.lang];
 let currentView = 'Home';
 let currentTable = 2;
+let currentLesson = null;
 
 const $ = (id) => document.getElementById(id);
 
@@ -35,6 +36,7 @@ function showView(name, { push = true } = {}) {
 window.addEventListener('popstate', (e) => {
   const target = e.state?.view || 'Home';
   if (currentView === 'Practice' && target !== 'Practice') Practice.abandon();
+  if (currentView === 'Lesson' && target !== 'Lesson') LessonRunner.abandon();
   if (target === 'Home') renderHome();
   if (e.state?.table) currentTable = e.state.table;
   showView(target, { push: false });
@@ -81,8 +83,52 @@ function renderTables() {
   }
 }
 
+function renderLessonList() {
+  const host = $('lessonList');
+  host.innerHTML = '';
+  let lastSection = null;
+
+  for (const lesson of Lessons.LESSONS) {
+    if (lesson.section !== lastSection) {
+      lastSection = lesson.section;
+      const h = document.createElement('div');
+      h.className = 'section-label';
+      h.textContent = Lessons.sectionTitle(lesson.section);
+      host.appendChild(h);
+    }
+
+    const unlocked = Store.isLessonUnlocked(lesson.id, Lessons.ALL_IDS);
+    const done = Store.isLessonDone(lesson.id);
+
+    const card = document.createElement('button');
+    card.type = 'button';
+    card.className = 'lesson-row' + (done ? ' done' : '') + (unlocked ? '' : ' locked');
+    card.innerHTML = `
+      <span class="lesson-no">${lesson.no}</span>
+      <span class="lesson-text">
+        <strong>${Lessons.topicTitle(lesson)}</strong>
+        <span>${t.lessonLabel(lesson.no)} · ${done ? t.lessonDone : unlocked ? t.lessonPages(lesson.pages) : t.lessonLocked}</span>
+      </span>
+      <span class="lesson-mark">${done ? '✓' : unlocked ? '›' : '🔒'}</span>`;
+
+    card.addEventListener('click', () => {
+      FX.unlock();
+      if (!unlocked) { FX.play('incorrect'); return; }
+      FX.play('tap');
+      startLesson(lesson.id);
+    });
+    host.appendChild(card);
+  }
+
+  const note = document.createElement('p');
+  note.className = 'more-soon';
+  note.textContent = t.moreSoon;
+  host.appendChild(note);
+}
+
 function renderHome() {
   renderStats();
+  renderLessonList();
   renderTables();
 }
 
@@ -122,9 +168,58 @@ function renderTableMenu() {
   }
 }
 
+/* ---------------------------------------------------------------- lesson */
+
+function startLesson(id) {
+  currentLesson = id;
+  showView('Lesson');
+  LessonRunner.start(id, (result) => {
+    renderHome();
+    renderLessonSummary(result);
+  });
+}
+
+function renderLessonSummary(r) {
+  $('summaryTitle').textContent = t.lessonDoneTitle(r.lesson.no);
+  $('summaryCorrect').textContent = `${r.correct}/${r.graded}`;
+  $('summaryCorrectLabel').textContent = t.sumCorrect;
+  $('summarySpeed').textContent = r.wrong;
+  $('summarySpeedLabel').textContent = t.sumWrong;
+  $('summaryNew').textContent = r.exercises;
+  $('summaryNewLabel').textContent = t.sumExercises;
+  $('summaryAgain').textContent = t.sumAgain;
+  $('summaryHome').textContent = t.sumHome;
+
+  const streakEl = $('summaryStreak');
+  streakEl.hidden = r.streak < 2;
+  streakEl.textContent = t.sumStreak(r.streak);
+
+  const clean = r.wrong === 0;
+  $('summaryEmoji').textContent = clean ? '🌟' : '🎉';
+
+  summaryAgainAction = () => startLesson(r.lesson.id);
+  showView('Summary');
+
+  FX.play('fanfare');
+  FX.confetti({ count: clean ? 130 : 80, originY: 0.35 });
+
+  if (r.firstTime) {
+    const i = Lessons.ALL_IDS.indexOf(r.lesson.id);
+    const hasNext = i >= 0 && i < Lessons.ALL_IDS.length - 1;
+    setTimeout(() => openSheet({
+      emoji: '📗',
+      title: t.lessonDoneTitle(r.lesson.no),
+      body: hasNext ? t.lessonDoneBody : t.lessonDoneLast
+    }), 700);
+  }
+}
+
 /* --------------------------------------------------------------- summary */
 
+let summaryAgainAction = null;
+
 function renderSummary(r) {
+  summaryAgainAction = () => startPractice();
   $('summaryTitle').textContent = t.sumTitle;
   $('summaryCorrect').textContent = `${r.correct}/${r.asked}`;
   $('summaryCorrectLabel').textContent = t.sumCorrect;
@@ -197,14 +292,21 @@ function applyLanguage() {
   $('trophyLabel').textContent = t.trophyLabel;
   $('factsLabel').textContent = t.factsLabel;
   $('tablesTitle').textContent = t.tablesTitle;
+  $('lessonsTitle').textContent = t.lessonsTitle;
+  $('tablesEntryTitle').textContent = t.tablesEntry;
+  $('tablesEntrySub').textContent = t.tablesEntrySub;
   $('footerNote').textContent = t.footerNote;
   $('learnBackLabel').textContent = t.back;
   $('practiceBackLabel').textContent = t.back;
+  $('tablesBackLabel').textContent = t.back;
+  $('lessonBackLabel').textContent = t.back;
 
   refreshInstallHint();
+  renderLessonList();
   renderTables();
   if (currentView === 'Table') renderTableMenu();
   if (currentView === 'Learn') Learn.render();
+  if (currentView === 'Lesson') LessonRunner.render();
 }
 
 /* -------------------------------------------------------------- install */
@@ -349,6 +451,29 @@ function init() {
   });
 
   $('tableBack').addEventListener('click', () => history.back());
+  $('tablesBack').addEventListener('click', () => history.back());
+
+  $('tablesEntry').addEventListener('click', () => {
+    FX.unlock();
+    FX.play('tap');
+    renderTables();
+    showView('Tables');
+  });
+
+  $('lessonBack').addEventListener('click', () => {
+    openSheet({
+      emoji: '🤔',
+      title: t.quitTitle,
+      body: t.quitBody,
+      okLabel: t.quitYes,
+      cancelLabel: t.quitNo,
+      onOk: () => {
+        LessonRunner.abandon();
+        renderHome();
+        history.back();
+      }
+    });
+  });
 
   $('modeLearn').addEventListener('click', () => {
     FX.unlock();
@@ -384,7 +509,10 @@ function init() {
     });
   });
 
-  $('summaryAgain').addEventListener('click', () => { FX.play('tap'); startPractice(); });
+  $('summaryAgain').addEventListener('click', () => {
+    FX.play('tap');
+    (summaryAgainAction || startPractice)();
+  });
   $('summaryHome').addEventListener('click', () => {
     FX.play('tap');
     renderHome();

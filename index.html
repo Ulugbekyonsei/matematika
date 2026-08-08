@@ -58,8 +58,17 @@
       </div>
     </section>
 
-    <h2 class="section-title" id="tablesTitle">Jadvallar</h2>
-    <div class="table-grid" id="tableGrid"></div>
+    <h2 class="section-title" id="lessonsTitle">Darslar</h2>
+    <div class="lesson-list" id="lessonList"></div>
+
+    <button class="tables-entry" id="tablesEntry" type="button">
+      <span class="tables-entry-emoji">✖️</span>
+      <span class="tables-entry-text">
+        <strong id="tablesEntryTitle">Ko‘paytirish jadvali</strong>
+        <span id="tablesEntrySub">2 dan 9 gacha</span>
+      </span>
+      <span class="tables-entry-arrow">›</span>
+    </button>
 
     <div class="install-hint" id="installHint" hidden>
       <div class="install-icon">📲</div>
@@ -75,6 +84,30 @@
       <span id="footerNote">2-sinf • Ko‘paytirish jadvali</span>
     </footer>
 
+  </div>
+
+  <!-- ============================================ TABLES GRID ==== -->
+  <div class="app view" id="viewTables" hidden>
+    <header class="subbar">
+      <button class="back-btn" id="tablesBack" type="button">← <span id="tablesBackLabel">Orqaga</span></button>
+      <h2 id="tablesTitle">Jadvallar</h2>
+    </header>
+    <div class="table-grid" id="tableGrid"></div>
+  </div>
+
+  <!-- =================================================== LESSON ==== -->
+  <div class="app view" id="viewLesson" hidden>
+    <header class="subbar">
+      <button class="back-btn" id="lessonBack" type="button">← <span id="lessonBackLabel">Orqaga</span></button>
+      <span class="step-pill" id="lessonExercise">1-mashq</span>
+      <span class="step-pill" id="lessonStep">1 / 32</span>
+    </header>
+
+    <div class="learn-progress"><div class="learn-progress-fill" id="lessonProgressFill"></div></div>
+
+    <div class="lesson-card" id="lessonBody"></div>
+    <div class="lesson-actions" id="lessonActions" hidden></div>
+    <div class="keypad" id="lessonKeypad" hidden></div>
   </div>
 
   <!-- ============================================== TABLE MENU ==== -->
@@ -187,6 +220,9 @@
   <script src="./lib/i18n.js"></script>
   <script src="./lib/store.js"></script>
   <script src="./lib/keypad.js"></script>
+  <script src="./lib/figures.js"></script>
+  <script src="./lib/lessons.js"></script>
+  <script src="./lib/lessonrunner.js"></script>
   <script src="./lib/learn.js"></script>
   <script src="./lib/practice.js"></script>
   <script src="./app.js"></script>
