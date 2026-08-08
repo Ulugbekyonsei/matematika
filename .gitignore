@@ -1,0 +1,20 @@
+# macOS
+.DS_Store
+._*
+
+# Google Drive conflict copies, in case anything is ever copied back there
+*conflicted copy*
+* (1).*
+
+# Python (tools/)
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Editors
+.vscode/
+.idea/
+
+# Local secrets — the Apps Script endpoint + shared secret land here in step 5
+config.local.js

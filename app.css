@@ -1,0 +1,363 @@
+/* ==========================================================================
+   Imona — Ko‘paytirish jadvali
+   Theme carried over from math_review_1st_grade.html so the two apps match.
+   ========================================================================== */
+
+:root {
+  --primary: #6366f1;
+  --primary-dark: #4f46e5;
+  --secondary: #ec4899;
+  --accent-yellow: #fbbf24;
+  --accent-green: #10b981;
+  --accent-blue: #06b6d4;
+  --bg-gradient: linear-gradient(135deg, #f0fdf4 0%, #e0f2fe 50%, #fef3c7 100%);
+  --card-bg: rgba(255, 255, 255, 0.95);
+  --card-shadow: 0 10px 30px -5px rgba(99, 102, 241, 0.12), 0 4px 12px -2px rgba(0, 0, 0, 0.05);
+  --radius: 20px;
+  --text-dark: #1e293b;
+  --text-muted: #64748b;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  touch-action: manipulation;      /* kills the 300ms tap delay on tablets */
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: 'Fredoka', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg-gradient);
+  background-attachment: fixed;
+  color: var(--text-dark);
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow-x: hidden;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.app {
+  max-width: 760px;
+  margin: 0 auto;
+  padding: max(16px, env(safe-area-inset-top)) 16px calc(24px + env(safe-area-inset-bottom));
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- floating background symbols ---------- */
+
+.bg-symbols {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  overflow: hidden;
+}
+
+.floating-symbol {
+  position: absolute;
+  font-weight: 700;
+  opacity: 0.12;
+  animation: floatAround 18s infinite ease-in-out;
+}
+
+@keyframes floatAround {
+  0%   { transform: translateY(0) rotate(0deg); }
+  50%  { transform: translateY(-40px) rotate(15deg); }
+  100% { transform: translateY(0) rotate(0deg); }
+}
+
+#fxCanvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 999;
+  display: none;
+}
+
+/* ---------- header ---------- */
+
+.topbar {
+  background: rgba(255, 255, 255, 0.9);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: var(--radius);
+  box-shadow: var(--card-shadow);
+  padding: 16px 18px;
+  margin-bottom: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.greeting h1 {
+  font-size: clamp(1.4rem, 5.5vw, 2rem);
+  font-weight: 700;
+  line-height: 1.15;
+  background: linear-gradient(135deg, #4f46e5, #ec4899);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.greeting p {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  margin-top: 3px;
+}
+
+.topbar-actions {
+  display: flex;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.icon-btn {
+  font-family: inherit;
+  font-size: 0.95rem;
+  font-weight: 600;
+  min-width: 46px;
+  height: 46px;
+  padding: 0 10px;
+  border: 2px solid rgba(99, 102, 241, 0.18);
+  border-radius: 14px;
+  background: #fff;
+  color: var(--primary-dark);
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.12s ease;
+}
+
+.icon-btn:active { transform: scale(0.92); background: #eef2ff; }
+
+/* ---------- stat row ---------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.stat {
+  background: var(--card-bg);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  box-shadow: var(--card-shadow);
+  padding: 12px 8px;
+  text-align: center;
+}
+
+.stat-emoji { font-size: 1.3rem; display: block; }
+
+.stat-value {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--primary-dark);
+  margin-top: 2px;
+}
+
+.stat-label {
+  display: block;
+  font-size: 0.72rem;
+  color: var(--text-muted);
+  margin-top: 1px;
+}
+
+/* ---------- table grid ---------- */
+
+.section-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text-dark);
+  margin: 0 4px 12px;
+}
+
+.table-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+.table-card {
+  font-family: inherit;
+  position: relative;
+  border: none;
+  border-radius: var(--radius);
+  padding: 18px 14px 14px;
+  box-shadow: var(--card-shadow);
+  cursor: pointer;
+  text-align: left;
+  color: #fff;
+  overflow: hidden;
+  transition: transform 0.14s ease, box-shadow 0.14s ease;
+}
+
+.table-card:active { transform: scale(0.96); }
+
+.table-card.locked {
+  background: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: none;
+  cursor: default;
+}
+
+.table-card.locked:active { transform: none; }
+
+.table-card .num {
+  font-size: 2.4rem;
+  font-weight: 700;
+  line-height: 1;
+  display: block;
+}
+
+.table-card .caption {
+  font-size: 0.85rem;
+  font-weight: 500;
+  opacity: 0.95;
+  display: block;
+  margin-top: 4px;
+}
+
+.table-card .lock {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  font-size: 1.1rem;
+  opacity: 0.75;
+}
+
+.table-card .trophy {
+  position: absolute;
+  top: 10px;
+  right: 12px;
+  font-size: 1.3rem;
+}
+
+.progress-track {
+  height: 7px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.35);
+  margin-top: 12px;
+  overflow: hidden;
+}
+
+.table-card.locked .progress-track { background: rgba(148, 163, 184, 0.3); }
+
+.progress-fill {
+  height: 100%;
+  border-radius: 99px;
+  background: #fff;
+  width: 0%;
+  transition: width 0.4s ease;
+}
+
+.progress-text {
+  font-size: 0.72rem;
+  opacity: 0.9;
+  margin-top: 5px;
+  display: block;
+}
+
+/* ---------- install hint ---------- */
+
+/* A class rule with display:flex outranks the UA's [hidden]{display:none}. */
+.install-hint[hidden],
+.sheet-backdrop[hidden] { display: none; }
+
+.install-hint {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #fff;
+  border: 2px dashed rgba(99, 102, 241, 0.35);
+  border-radius: 16px;
+  padding: 14px;
+  margin-top: 20px;
+}
+
+.install-icon { font-size: 1.6rem; }
+
+.install-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
+.install-text strong { font-size: 0.92rem; }
+.install-text span { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
+
+.install-close {
+  border: none;
+  background: transparent;
+  font-size: 1rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 6px;
+}
+
+/* ---------- bottom sheet ---------- */
+
+.sheet-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.sheet {
+  background: #fff;
+  border-radius: 24px;
+  padding: 28px 24px 22px;
+  text-align: center;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.3);
+  animation: popIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes popIn {
+  from { opacity: 0; transform: scale(0.85) translateY(10px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.sheet-emoji { font-size: 3rem; margin-bottom: 8px; }
+.sheet h3 { font-size: 1.35rem; font-weight: 700; margin-bottom: 6px; }
+.sheet p { font-size: 0.92rem; color: var(--text-muted); margin-bottom: 20px; line-height: 1.4; }
+
+.btn-primary {
+  font-family: inherit;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: none;
+  border-radius: 14px;
+  padding: 13px 32px;
+  width: 100%;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+
+.btn-primary:active { transform: scale(0.96); }
+
+/* ---------- footer ---------- */
+
+.footer {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--text-muted);
+  margin-top: 26px;
+  opacity: 0.8;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
