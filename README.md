@@ -45,6 +45,15 @@ A service worker needs `http://` or `https://` — opening `index.html` as a
 Push to `main`; GitHub Pages serves it. **Bump `CACHE_VERSION` in `sw.js`**
 first, or installed devices keep serving the cached old build.
 
+GitHub Pages sends `Cache-Control: max-age=600`, so a new build can take up to
+10 minutes to reach a device. The service worker precaches with
+`cache: 'reload'` so that a version bump never fills the new cache with stale
+files — without it, bumping the version ships nothing.
+
+Target device is an Android (Honor) tablet, so Chrome fires
+`beforeinstallprompt` and the app offers a one-tap Install button. The
+per-browser fallback wording only matters on browsers that don't.
+
 ## Build order
 
 1. ~~Repo, PWA skeleton, confirm it installs on her tablet~~

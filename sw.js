@@ -4,7 +4,7 @@
    load. Bump CACHE_VERSION on every deploy or she keeps the old app.
    ========================================================================== */
 
-const CACHE_VERSION = 'v3';
+const CACHE_VERSION = 'v4';
 const SHELL_CACHE = `imona-shell-${CACHE_VERSION}`;
 const FONT_CACHE = `imona-fonts-${CACHE_VERSION}`;
 
@@ -25,7 +25,13 @@ const SHELL_ASSETS = [
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(SHELL_CACHE)
-      .then(cache => cache.addAll(SHELL_ASSETS))
+      // cache:'reload' is essential, not a nicety. GitHub Pages serves
+      // Cache-Control: max-age=600, so a plain addAll() reads from the browser's
+      // HTTP cache and fills the brand-new cache with up-to-10-minute-old files
+      // -- bumping CACHE_VERSION would then ship nothing.
+      .then(cache => cache.addAll(
+        SHELL_ASSETS.map(url => new Request(url, { cache: 'reload' }))
+      ))
       .then(() => self.skipWaiting())
   );
 });
@@ -70,7 +76,7 @@ self.addEventListener('fetch', (event) => {
   // App shell: cache-first, refresh the copy in the background.
   event.respondWith(
     caches.match(request).then((hit) => {
-      const network = fetch(request).then((res) => {
+      const network = fetch(request, { cache: 'no-cache' }).then((res) => {
         if (res && res.status === 200) {
           const copy = res.clone();
           caches.open(SHELL_CACHE).then(c => c.put(request, copy));
