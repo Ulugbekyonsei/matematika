@@ -4,7 +4,7 @@
    load. Bump CACHE_VERSION on every deploy or she keeps the old app.
    ========================================================================== */
 
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const SHELL_CACHE = `imona-shell-${CACHE_VERSION}`;
 const FONT_CACHE = `imona-fonts-${CACHE_VERSION}`;
 
@@ -18,7 +18,8 @@ const SHELL_ASSETS = [
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',
-  './icons/icon-180.png'
+  './icons/icon-180.png',
+  './icons/icon-maskable-512.png'
 ];
 
 self.addEventListener('install', (event) => {
