@@ -21,15 +21,23 @@ Runs as an installed web app on her tablet: offline, no login, no server.
 ## Layout
 
 ```
-index.html                 home screen shell
+index.html                 all five views (home, table, learn, practice, summary)
 app.css                    theme (shared with the older 1st-grade review app)
-app.js                     state, ladder rendering, language, install, SW registration
+app.js                     router, home, table menu, summary, language, install
+lib/store.js               persistence, mastery model, streak, session builder
+lib/learn.js               the 6-step lesson, generic over the table number
+lib/practice.js            the drill engine and response timing
+lib/keypad.js              number pad shared by Learn and Practice
 lib/fx.js                  canvas confetti + WebAudio sounds, zero dependencies
 lib/i18n.js                uz / en strings
 sw.js                      offline cache — bump CACHE_VERSION on every deploy
 manifest.webmanifest       PWA manifest
 tools/make_icons.py        regenerates icons/
 ```
+
+Roughly three 15-question sessions master one table, so ×2–×9 is about
+24 sessions. Adding a table is data, not code: a colour in `CARD_GRADIENTS`
+and an emoji in `learn.js`'s `ITEM`.
 
 ## Develop
 
@@ -57,7 +65,7 @@ per-browser fallback wording only matters on browsers that don't.
 ## Build order
 
 1. ~~Repo, PWA skeleton, confirm it installs on her tablet~~
-2. ×2 end to end: Learn + Practice + mastery + trophy
+2. ~~×2 end to end: Learn + Practice + mastery + trophy~~
 3. **Give it to her and watch.** Everything after this is only worth building if she comes back the next day
 4. Tables ×3–×9 on the same engine
 5. Apps Script + Sheet sync

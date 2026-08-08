@@ -4,7 +4,7 @@
    load. Bump CACHE_VERSION on every deploy or she keeps the old app.
    ========================================================================== */
 
-const CACHE_VERSION = 'v4';
+const CACHE_VERSION = 'v5';
 const SHELL_CACHE = `imona-shell-${CACHE_VERSION}`;
 const FONT_CACHE = `imona-fonts-${CACHE_VERSION}`;
 
@@ -15,6 +15,10 @@ const SHELL_ASSETS = [
   './app.js',
   './lib/fx.js',
   './lib/i18n.js',
+  './lib/store.js',
+  './lib/keypad.js',
+  './lib/learn.js',
+  './lib/practice.js',
   './manifest.webmanifest',
   './icons/icon-192.png',
   './icons/icon-512.png',

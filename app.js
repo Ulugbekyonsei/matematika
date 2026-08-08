@@ -1,13 +1,7 @@
 /* ==========================================================================
-   app.js — shell for the home screen.
-   Step 1 scope: install, offline, language, and the table ladder rendered from
-   real state. The Learn/Practice engine lands in step 2.
+   app.js — view router, home screen, table menu, session summary.
+   Lesson and drill logic live in lib/learn.js and lib/practice.js.
    ========================================================================== */
-
-const TABLES = [2, 3, 4, 5, 6, 7, 8, 9];
-const MULTIPLIERS = [2, 3, 4, 5, 6, 7, 8, 9];   // ×0, ×1, ×10 are a separate chapter
-const FACTS_PER_TABLE = MULTIPLIERS.length;      // 8
-const TOTAL_FACTS = TABLES.length * FACTS_PER_TABLE;   // 64
 
 const CARD_GRADIENTS = {
   2: 'linear-gradient(135deg, #6366f1, #8b5cf6)',
@@ -20,78 +14,52 @@ const CARD_GRADIENTS = {
   9: 'linear-gradient(135deg, #14b8a6, #0d9488)'
 };
 
-/* ----------------------------------------------------------------- state */
+const VIEWS = ['Home', 'Table', 'Learn', 'Practice', 'Summary'];
 
-const STORAGE_KEY = 'imona.matematika.v1';
+let t = STRINGS[Store.lang];
+let currentView = 'Home';
+let currentTable = 2;
 
-const DEFAULT_STATE = {
-  v: 1,
-  lang: 'uz',
-  sound: true,
-  facts: {},                       // "2x3" -> { attempts, correct, fastStreak, mastered, bestMs }
-  tables: { 2: { unlocked: true } },
-  streak: { count: 0, lastActiveDate: null, freezeUsedWeek: null },
-  installHintDismissed: false
-};
+const $ = (id) => document.getElementById(id);
 
-function loadState() {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return structuredClone(DEFAULT_STATE);
-    return { ...structuredClone(DEFAULT_STATE), ...JSON.parse(raw) };
-  } catch (e) {
-    return structuredClone(DEFAULT_STATE);
-  }
+/* ---------------------------------------------------------------- router */
+
+function showView(name, { push = true } = {}) {
+  for (const v of VIEWS) $('view' + v).hidden = (v !== name);
+  currentView = name;
+  window.scrollTo(0, 0);
+  if (push) history.pushState({ view: name, table: currentTable }, '');
 }
 
-function saveState() {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-  } catch (e) { /* private mode or quota — the app still works for this session */ }
-}
+// Android's back gesture must move through the app, not exit it.
+window.addEventListener('popstate', (e) => {
+  const target = e.state?.view || 'Home';
+  if (currentView === 'Practice' && target !== 'Practice') Practice.abandon();
+  if (target === 'Home') renderHome();
+  if (e.state?.table) currentTable = e.state.table;
+  showView(target, { push: false });
+});
 
-let state = loadState();
-let t = STRINGS[state.lang];
-
-/* --------------------------------------------------------------- helpers */
-
-function isTableUnlocked(n) {
-  return Boolean(state.tables[n] && state.tables[n].unlocked);
-}
-
-function masteredInTable(n) {
-  return MULTIPLIERS.filter(m => state.facts[`${n}x${m}`]?.mastered).length;
-}
-
-function totalMastered() {
-  return TABLES.reduce((sum, n) => sum + masteredInTable(n), 0);
-}
-
-function trophyCount() {
-  return TABLES.filter(n => masteredInTable(n) === FACTS_PER_TABLE).length;
-}
-
-/* ----------------------------------------------------------------- render */
+/* ------------------------------------------------------------------ home */
 
 function renderStats() {
-  document.getElementById('streakValue').textContent = state.streak.count;
-  document.getElementById('trophyValue').textContent = trophyCount();
-  document.getElementById('factsValue').textContent = totalMastered();
+  $('streakValue').textContent = Store.state.streak.count;
+  $('trophyValue').textContent = Store.trophyCount();
+  $('factsValue').textContent = Store.totalMastered();
 }
 
 function renderTables() {
-  const grid = document.getElementById('tableGrid');
+  const grid = $('tableGrid');
   grid.innerHTML = '';
 
-  for (const n of TABLES) {
-    const unlocked = isTableUnlocked(n);
-    const done = masteredInTable(n);
-    const complete = done === FACTS_PER_TABLE;
+  for (const n of Store.TABLES) {
+    const unlocked = Store.isUnlocked(n);
+    const done = Store.masteredInTable(n);
+    const complete = Store.isTableComplete(n);
 
     const card = document.createElement('button');
     card.type = 'button';
     card.className = 'table-card' + (unlocked ? '' : ' locked');
-    card.dataset.table = String(n);
     if (unlocked) card.style.background = CARD_GRADIENTS[n];
 
     const badge = complete ? '<span class="trophy">🏆</span>'
@@ -103,9 +71,9 @@ function renderTables() {
       <span class="num">${n}</span>
       <span class="caption">${unlocked ? t.tableCaption(n) : t.tableLocked}</span>
       <div class="progress-track">
-        <div class="progress-fill" style="width:${(done / FACTS_PER_TABLE) * 100}%"></div>
+        <div class="progress-fill" style="width:${(done / Store.FACTS_PER_TABLE) * 100}%"></div>
       </div>
-      <span class="progress-text">${t.progressText(done, FACTS_PER_TABLE)}</span>
+      <span class="progress-text">${t.progressText(done, Store.FACTS_PER_TABLE)}</span>
     `;
 
     card.addEventListener('click', () => onTableTap(n, unlocked));
@@ -113,35 +81,9 @@ function renderTables() {
   }
 }
 
-function applyLanguage() {
-  t = STRINGS[state.lang];
-  document.documentElement.lang = t.htmlLang;
-
-  document.getElementById('greeting').textContent = t.greeting;
-  document.getElementById('subtitle').textContent = t.subtitle;
-  document.getElementById('langBtn').textContent = t.langButton;
-  document.getElementById('streakLabel').textContent = t.streakLabel;
-  document.getElementById('trophyLabel').textContent = t.trophyLabel;
-  document.getElementById('factsLabel').textContent = t.factsLabel;
-  document.getElementById('tablesTitle').textContent = t.tablesTitle;
-  document.getElementById('footerNote').textContent = t.footerNote;
-
-  refreshInstallHint();
+function renderHome() {
+  renderStats();
   renderTables();
-}
-
-/* ------------------------------------------------------------------ sheet */
-
-function openSheet({ emoji, title, body }) {
-  document.getElementById('sheetEmoji').textContent = emoji;
-  document.getElementById('sheetTitle').textContent = title;
-  document.getElementById('sheetBody').textContent = body;
-  document.getElementById('sheetBtn').textContent = t.sheetOk;
-  document.getElementById('sheetBackdrop').hidden = false;
-}
-
-function closeSheet() {
-  document.getElementById('sheetBackdrop').hidden = true;
 }
 
 function onTableTap(n, unlocked) {
@@ -151,13 +93,121 @@ function onTableTap(n, unlocked) {
     openSheet({ emoji: '🔒', title: t.lockedTitle, body: t.lockedBody(n) });
     return;
   }
-  // Step 2 replaces this with the Learn / Practice screens.
-  FX.play('fanfare');
-  FX.confetti({ count: 70, originY: 0.45 });
-  openSheet({ emoji: '🚧', title: t.soonTitle, body: t.soonBody });
+  FX.play('tap');
+  currentTable = n;
+  renderTableMenu();
+  showView('Table');
 }
 
-/* ---------------------------------------------------------------- install */
+/* ------------------------------------------------------------ table menu */
+
+function renderTableMenu() {
+  const n = currentTable;
+  $('tableHeading').textContent = t.tableCaption(n);
+  $('tableBackLabel').textContent = t.back;
+  $('modeLearnTitle').textContent = t.menuLearn;
+  $('modeLearnSub').textContent = Store.isLearned(n) ? t.menuLearnDone : t.menuLearnSub;
+  $('modeLearnBadge').hidden = !Store.isLearned(n);
+  $('modePracticeTitle').textContent = t.menuPractice;
+  $('modePracticeSub').textContent = t.menuPracticeSub(Store.SESSION_LENGTH);
+
+  const grid = $('tableFactGrid');
+  grid.innerHTML = '';
+  for (const m of Store.MULTIPLIERS) {
+    const mastered = Store.isMastered(n, m);
+    const cell = document.createElement('div');
+    cell.className = 'fact-cell' + (mastered ? ' mastered' : '');
+    cell.innerHTML = `${n} <span class="dotop">•</span> ${m} = <strong>${mastered ? n * m : '?'}</strong>`;
+    grid.appendChild(cell);
+  }
+}
+
+/* --------------------------------------------------------------- summary */
+
+function renderSummary(r) {
+  $('summaryTitle').textContent = t.sumTitle;
+  $('summaryCorrect').textContent = `${r.correct}/${r.asked}`;
+  $('summaryCorrectLabel').textContent = t.sumCorrect;
+  $('summarySpeed').textContent = r.avgMs ? `${(r.avgMs / 1000).toFixed(1)}s` : '—';
+  $('summarySpeedLabel').textContent = t.sumSpeed;
+  $('summaryNew').textContent = r.newlyMastered;
+  $('summaryNewLabel').textContent = t.sumNewFacts;
+  $('summaryAgain').textContent = t.sumAgain;
+  $('summaryHome').textContent = t.sumHome;
+
+  const streakEl = $('summaryStreak');
+  streakEl.hidden = r.streak < 2;
+  streakEl.textContent = t.sumStreak(r.streak);
+
+  const perfect = r.correct === r.asked;
+  $('summaryEmoji').textContent = perfect ? '🌟' : r.correct >= r.asked * 0.6 ? '🎉' : '💪';
+
+  showView('Summary');
+  if (perfect) { FX.play('fanfare'); FX.confetti({ count: 110, originY: 0.35 }); }
+
+  if (r.tableComplete) {
+    setTimeout(() => {
+      FX.play('fanfare');
+      FX.confetti({ count: 150, originY: 0.3 });
+      openSheet({
+        emoji: '🏆',
+        title: t.trophyTitle(r.table),
+        body: r.unlocked ? t.trophyBody(r.unlocked) : t.trophyBodyLast
+      });
+    }, 600);
+  }
+}
+
+/* ----------------------------------------------------------------- sheet */
+
+let sheetOnOk = null;
+let sheetOnCancel = null;
+
+function openSheet({ emoji, title, body, okLabel, cancelLabel, onOk, onCancel }) {
+  $('sheetEmoji').textContent = emoji;
+  $('sheetTitle').textContent = title;
+  $('sheetBody').textContent = body;
+  $('sheetBtn').textContent = okLabel || t.sheetOk;
+
+  const cancel = $('sheetCancel');
+  cancel.hidden = !cancelLabel;
+  if (cancelLabel) cancel.textContent = cancelLabel;
+
+  sheetOnOk = onOk || null;
+  sheetOnCancel = onCancel || null;
+  $('sheetBackdrop').hidden = false;
+}
+
+function closeSheet() {
+  $('sheetBackdrop').hidden = true;
+  sheetOnOk = null;
+  sheetOnCancel = null;
+}
+
+/* ---------------------------------------------------------------- i18n */
+
+function applyLanguage() {
+  t = STRINGS[Store.lang];
+  document.documentElement.lang = t.htmlLang;
+
+  $('greeting').textContent = t.greeting;
+  $('subtitle').textContent = t.subtitle;
+  $('langBtn').textContent = t.langButton;
+  $('streakLabel').textContent = t.streakLabel;
+  $('trophyLabel').textContent = t.trophyLabel;
+  $('factsLabel').textContent = t.factsLabel;
+  $('tablesTitle').textContent = t.tablesTitle;
+  $('footerNote').textContent = t.footerNote;
+  $('learnBackLabel').textContent = t.back;
+  $('practiceBackLabel').textContent = t.back;
+
+  refreshInstallHint();
+  renderTables();
+  if (currentView === 'Table') renderTableMenu();
+  if (currentView === 'Learn') Learn.render();
+}
+
+/* -------------------------------------------------------------- install */
 
 function isStandalone() {
   return window.matchMedia('(display-mode: standalone)').matches
@@ -166,22 +216,19 @@ function isStandalone() {
 
 function isIOS() {
   return /iPad|iPhone|iPod/.test(navigator.userAgent)
-      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   // iPadOS 13+
+      || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 }
 
 function platformHint() {
-  const ua = navigator.userAgent;
   // Detect the browser, not the device brand: an Honor tablet running Chrome
   // needs Chrome's wording, not Huawei Browser's.
+  const ua = navigator.userAgent;
   if (isIOS()) return 'ios';
   if (/HuaweiBrowser/i.test(ua)) return 'huawei';
   if (/Android|HarmonyOS/i.test(ua)) return 'android';
   return 'generic';
 }
 
-// Chromium fires this when the app is installable; holding it lets us offer a
-// real one-tap install button instead of "open the menu and find it yourself".
-// Registered at top level because it can fire before init() runs.
 let deferredInstallPrompt = null;
 
 window.addEventListener('beforeinstallprompt', (e) => {
@@ -192,50 +239,31 @@ window.addEventListener('beforeinstallprompt', (e) => {
 
 window.addEventListener('appinstalled', () => {
   deferredInstallPrompt = null;
-  const hint = document.getElementById('installHint');
+  const hint = $('installHint');
   if (hint) hint.hidden = true;
 });
 
 function refreshInstallHint() {
-  const hint = document.getElementById('installHint');
+  const hint = $('installHint');
   if (!hint) return;
 
-  if (isStandalone() || state.installHintDismissed) {
+  if (isStandalone() || Store.state.installHintDismissed) {
     hint.hidden = true;
     return;
   }
 
-  const action = document.getElementById('installAction');
   hint.hidden = false;
-  document.getElementById('installTitle').textContent = t.installTitle;
-  document.getElementById('installBody').textContent =
+  $('installTitle').textContent = t.installTitle;
+  $('installBody').textContent =
     deferredInstallPrompt ? t.installBody.ready : t.installBody[platformHint()];
-  action.textContent = t.installAction;
-  action.hidden = !deferredInstallPrompt;
+  $('installAction').textContent = t.installAction;
+  $('installAction').hidden = !deferredInstallPrompt;
 }
 
-function setupInstallHint() {
-  document.getElementById('installClose').addEventListener('click', () => {
-    document.getElementById('installHint').hidden = true;
-    state.installHintDismissed = true;
-    saveState();
-  });
-
-  document.getElementById('installAction').addEventListener('click', async () => {
-    if (!deferredInstallPrompt) return;
-    deferredInstallPrompt.prompt();
-    await deferredInstallPrompt.userChoice;
-    deferredInstallPrompt = null;        // the event is single-use
-    refreshInstallHint();
-  });
-
-  refreshInstallHint();
-}
-
-/* ------------------------------------------------------------- decoration */
+/* ----------------------------------------------------------- decoration */
 
 function renderBackgroundSymbols() {
-  const host = document.getElementById('bgSymbols');
+  const host = $('bgSymbols');
   const symbols = ['•', '×', '=', '2', '7', '★', '⭐', '9', '+'];
   for (let i = 0; i < 14; i++) {
     const el = document.createElement('span');
@@ -249,15 +277,14 @@ function renderBackgroundSymbols() {
   }
 }
 
-/* ---------------------------------------------------------- service worker */
+/* -------------------------------------------------------- service worker */
 
 function registerServiceWorker() {
   if (!('serviceWorker' in navigator)) return;
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('./sw.js').catch(() => { /* offline install is a bonus */ });
+    navigator.serviceWorker.register('./sw.js').catch(() => {});
   });
 
-  // When a new version takes over, reload once so she never sees a half-old app.
   let reloading = false;
   navigator.serviceWorker.addEventListener('controllerchange', () => {
     if (reloading) return;
@@ -266,38 +293,110 @@ function registerServiceWorker() {
   });
 }
 
-/* ------------------------------------------------------------------- init */
+/* ------------------------------------------------------------------ init */
+
+function startPractice() {
+  showView('Practice');
+  Practice.start(currentTable, (result) => {
+    renderHome();
+    renderSummary(result);
+  });
+}
 
 function init() {
-  FX.enabled = state.sound;
-  document.getElementById('soundBtn').textContent = state.sound ? '🔊' : '🔇';
+  FX.enabled = Store.sound;
+  $('soundBtn').textContent = Store.sound ? '🔊' : '🔇';
 
-  document.getElementById('langBtn').addEventListener('click', () => {
-    state.lang = state.lang === 'uz' ? 'en' : 'uz';
-    saveState();
+  $('langBtn').addEventListener('click', () => {
+    Store.set({ lang: Store.lang === 'uz' ? 'en' : 'uz' });
     FX.unlock();
     FX.play('tap');
     applyLanguage();
   });
 
-  document.getElementById('soundBtn').addEventListener('click', (e) => {
-    state.sound = !state.sound;
-    FX.enabled = state.sound;
-    e.currentTarget.textContent = state.sound ? '🔊' : '🔇';
-    saveState();
-    if (state.sound) { FX.unlock(); FX.play('tap'); }
+  $('soundBtn').addEventListener('click', (e) => {
+    Store.set({ sound: !Store.sound });
+    FX.enabled = Store.sound;
+    e.currentTarget.textContent = Store.sound ? '🔊' : '🔇';
+    if (Store.sound) { FX.unlock(); FX.play('tap'); }
   });
 
-  document.getElementById('sheetBtn').addEventListener('click', closeSheet);
-  document.getElementById('sheetBackdrop').addEventListener('click', (e) => {
-    if (e.target.id === 'sheetBackdrop') closeSheet();
+  $('installClose').addEventListener('click', () => {
+    $('installHint').hidden = true;
+    Store.set({ installHintDismissed: true });
+  });
+
+  $('installAction').addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;
+    refreshInstallHint();
+  });
+
+  $('sheetBtn').addEventListener('click', () => {
+    const fn = sheetOnOk;
+    closeSheet();
+    if (fn) fn();
+  });
+  $('sheetCancel').addEventListener('click', () => {
+    const fn = sheetOnCancel;
+    closeSheet();
+    if (fn) fn();
+  });
+  $('sheetBackdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'sheetBackdrop' && !sheetOnOk) closeSheet();
+  });
+
+  $('tableBack').addEventListener('click', () => history.back());
+
+  $('modeLearn').addEventListener('click', () => {
+    FX.unlock();
+    FX.play('tap');
+    showView('Learn');
+    Learn.start(currentTable, () => {
+      renderTableMenu();
+      startPractice();
+    });
+  });
+
+  $('modePractice').addEventListener('click', () => {
+    FX.unlock();
+    FX.play('tap');
+    startPractice();
+  });
+
+  $('learnBack').addEventListener('click', () => history.back());
+  $('learnNext').addEventListener('click', () => Learn.advance());
+
+  $('practiceBack').addEventListener('click', () => {
+    openSheet({
+      emoji: '🤔',
+      title: t.quitTitle,
+      body: t.quitBody,
+      okLabel: t.quitYes,
+      cancelLabel: t.quitNo,
+      onOk: () => {
+        Practice.abandon();
+        renderHome();
+        history.back();
+      }
+    });
+  });
+
+  $('summaryAgain').addEventListener('click', () => { FX.play('tap'); startPractice(); });
+  $('summaryHome').addEventListener('click', () => {
+    FX.play('tap');
+    renderHome();
+    showView('Home');
   });
 
   applyLanguage();
   renderStats();
   renderBackgroundSymbols();
-  setupInstallHint();
+  refreshInstallHint();
   registerServiceWorker();
+  history.replaceState({ view: 'Home', table: currentTable }, '');
 }
 
 init();
