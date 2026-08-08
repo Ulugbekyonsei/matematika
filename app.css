@@ -288,6 +288,23 @@ body {
 .install-text strong { font-size: 0.92rem; }
 .install-text span { font-size: 0.8rem; color: var(--text-muted); line-height: 1.35; }
 
+.install-action {
+  font-family: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+  border: none;
+  border-radius: 12px;
+  padding: 11px 20px;
+  cursor: pointer;
+  flex-shrink: 0;
+  transition: transform 0.12s ease;
+}
+
+.install-action:active { transform: scale(0.95); }
+.install-action[hidden] { display: none; }
+
 .install-close {
   border: none;
   background: transparent;

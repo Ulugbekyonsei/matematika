@@ -124,10 +124,9 @@ function applyLanguage() {
   document.getElementById('trophyLabel').textContent = t.trophyLabel;
   document.getElementById('factsLabel').textContent = t.factsLabel;
   document.getElementById('tablesTitle').textContent = t.tablesTitle;
-  document.getElementById('installTitle').textContent = t.installTitle;
-  document.getElementById('installBody').textContent = t.installBody;
   document.getElementById('footerNote').textContent = t.footerNote;
 
+  refreshInstallHint();
   renderTables();
 }
 
@@ -170,16 +169,67 @@ function isIOS() {
       || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);   // iPadOS 13+
 }
 
-function setupInstallHint() {
-  const hint = document.getElementById('installHint');
-  if (isStandalone() || state.installHintDismissed || !isIOS()) return;
+function platformHint() {
+  const ua = navigator.userAgent;
+  // Detect the browser, not the device brand: an Honor tablet running Chrome
+  // needs Chrome's wording, not Huawei Browser's.
+  if (isIOS()) return 'ios';
+  if (/HuaweiBrowser/i.test(ua)) return 'huawei';
+  if (/Android|HarmonyOS/i.test(ua)) return 'android';
+  return 'generic';
+}
 
-  hint.hidden = false;
-  document.getElementById('installClose').addEventListener('click', () => {
+// Chromium fires this when the app is installable; holding it lets us offer a
+// real one-tap install button instead of "open the menu and find it yourself".
+// Registered at top level because it can fire before init() runs.
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  refreshInstallHint();
+});
+
+window.addEventListener('appinstalled', () => {
+  deferredInstallPrompt = null;
+  const hint = document.getElementById('installHint');
+  if (hint) hint.hidden = true;
+});
+
+function refreshInstallHint() {
+  const hint = document.getElementById('installHint');
+  if (!hint) return;
+
+  if (isStandalone() || state.installHintDismissed) {
     hint.hidden = true;
+    return;
+  }
+
+  const action = document.getElementById('installAction');
+  hint.hidden = false;
+  document.getElementById('installTitle').textContent = t.installTitle;
+  document.getElementById('installBody').textContent =
+    deferredInstallPrompt ? t.installBody.ready : t.installBody[platformHint()];
+  action.textContent = t.installAction;
+  action.hidden = !deferredInstallPrompt;
+}
+
+function setupInstallHint() {
+  document.getElementById('installClose').addEventListener('click', () => {
+    document.getElementById('installHint').hidden = true;
     state.installHintDismissed = true;
     saveState();
   });
+
+  document.getElementById('installAction').addEventListener('click', async () => {
+    if (!deferredInstallPrompt) return;
+    deferredInstallPrompt.prompt();
+    await deferredInstallPrompt.userChoice;
+    deferredInstallPrompt = null;        // the event is single-use
+    refreshInstallHint();
+  });
+
+  refreshInstallHint();
 }
 
 /* ------------------------------------------------------------- decoration */
