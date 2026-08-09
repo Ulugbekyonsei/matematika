@@ -15,7 +15,7 @@ exercises that restarts at 1**, and a block straddles page boundaries.
 | Exercise blocks in the book | **159** |
 | Total exercises | **1,101** |
 | Exercises per block | ~7 |
-| Built so far | **5** (pages 3–9) |
+| Built so far | **6** (pages 3–10) |
 
 ## Design decisions
 
@@ -40,6 +40,11 @@ Each is a self-contained renderer, so further lessons are pure JSON in
 
 `fill-blank` takes `_` anywhere in the expression, so `59 − _ = 50` works as
 well as `57 = 50 +`.
+
+When the book numbers sub-problems inside one exercise ("Masalalarni yeching:
+1) … 2) …"), give each its own entry with the same `n` and a `part:` — step ids
+stay unique while the screen still shows one exercise number. A `namuna` may
+carry a `note:` — the book's boxed rule, shown under the worked examples.
 
 **Keypad width is derived per exercise from its widest answer.** Never hardcode
 it: lesson 1 has `60 + 40 = 100` and lesson 5 asks for the number after 99.

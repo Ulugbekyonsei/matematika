@@ -965,6 +965,19 @@ body {
 
 .namuna-work { font-size: 1.05rem; font-weight: 600; color: var(--text-dark); margin-top: 6px; }
 
+/* the book's boxed rule ("to check addition, subtract an addend…") */
+.namuna-note {
+  margin-top: 16px;
+  background: #fdf0d5;
+  border: 2px solid #e8b04b;
+  border-radius: 14px;
+  padding: 12px 16px;
+  font-size: 0.98rem;
+  line-height: 1.5;
+  text-align: left;
+  color: var(--text-dark);
+}
+
 /* ---------- multiple choice ---------- */
 
 .choice-list { display: flex; flex-direction: column; gap: 10px; }
@@ -1111,6 +1124,11 @@ body {
 }
 
 .crate-label { font-size: 0.9rem; color: var(--text-dark); }
+
+/* two amounts joined by a brace to their total (crates reused above it) */
+.total-wrap { display: flex; flex-direction: column; align-items: center; }
+.total-brace { width: min(100%, 280px); height: 24px; margin-top: 6px; }
+.total-label { font-size: 1.05rem; font-weight: 600; color: var(--primary-dark); }
 
 .method-row { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
 
