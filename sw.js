@@ -4,7 +4,7 @@
    load. Bump CACHE_VERSION on every deploy or she keeps the old app.
    ========================================================================== */
 
-const CACHE_VERSION = 'v10';
+const CACHE_VERSION = 'v11';
 const SHELL_CACHE = `imona-shell-${CACHE_VERSION}`;
 const FONT_CACHE = `imona-fonts-${CACHE_VERSION}`;
 

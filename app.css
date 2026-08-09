@@ -915,6 +915,10 @@ body {
 .fig { width: 100%; max-width: 380px; height: auto; }
 .ex-figure:has(.fig) { display: flex; justify-content: center; }
 
+/* A square-ish figure at the full 380px would push the keypad off a tablet
+   screen, so cap the height. preserveAspectRatio centres the drawing. */
+.ex-figure > .fig { max-height: 208px; }
+
 /* ---------- namuna (worked example) ---------- */
 
 .namuna-badge, .selfcheck-badge {
@@ -1096,6 +1100,24 @@ body {
 .fig-cell .fig { width: 74px; }
 .fig-no { font-size: 0.8rem; color: var(--text-muted); }
 
+/* the two captioned groups on the right-angle teaching card */
+.angle-groups { display: flex; flex-direction: column; gap: 16px; }
+
+.angle-group {
+  background: rgba(56, 189, 248, 0.08);
+  border-radius: 16px;
+  padding: 12px 10px;
+}
+
+.angle-cap {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-muted);
+  margin-bottom: 8px;
+}
+
+.angle-cell .fig { width: 96px; }
+
 .fig-table {
   width: 100%;
   border-collapse: collapse;
@@ -1124,6 +1146,7 @@ body {
 }
 
 .crate-label { font-size: 0.9rem; color: var(--text-dark); }
+.crate-note { font-size: 0.85rem; color: var(--text-muted); }
 
 /* two amounts joined by a brace to their total (crates reused above it) */
 .total-wrap { display: flex; flex-direction: column; align-items: center; }

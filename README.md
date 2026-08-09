@@ -15,7 +15,7 @@ exercises that restarts at 1**, and a block straddles page boundaries.
 | Exercise blocks in the book | **159** |
 | Total exercises | **1,101** |
 | Exercises per block | ~7 |
-| Built so far | **7** (pages 3–11) |
+| Built so far | **8** (pages 3–13) |
 
 ## Design decisions
 
@@ -33,7 +33,7 @@ exercises that restarts at 1**, and a block straddles page boundaries.
 
 `namuna` · `compute` · `fill-blank` · `word-problem` · `neighbours` ·
 `choice` · `count-figures` · `self-check` · `match-pairs` · `order` ·
-`shapes-sides`
+`shapes-sides` · `classify-angles`
 
 Each is a self-contained renderer, so further lessons are pure JSON in
 `lib/lessons.js`. Types repeat heavily after the first dozen lessons.
@@ -43,8 +43,11 @@ well as `57 = 50 +`.
 
 When the book numbers sub-problems inside one exercise ("Masalalarni yeching:
 1) … 2) …"), give each its own entry with the same `n` and a `part:` — step ids
-stay unique while the screen still shows one exercise number. A `namuna` may
-carry a `note:` — the book's boxed rule, shown under the worked examples.
+stay unique while the screen still shows one exercise number. Every type derives
+its ids from `part`, so an exercise can mix card kinds: lesson 8's exercise 1 is
+two `namuna` cards plus a `count-figures` set. A `namuna` may carry a `note:`
+(the book's boxed rule) and a `figure:`, so it also serves the geometry pages
+where the book teaches with a picture rather than a worked example.
 
 **Keypad width is derived per exercise from its widest answer.** Never hardcode
 it: lesson 1 has `60 + 40 = 100` and lesson 5 asks for the number after 99.
@@ -96,7 +99,14 @@ files — without it, bumping the version ships nothing.
    the figures matter and the text layer scrambles across columns
 2. Add an entry to `LESSONS` in `lib/lessons.js`
 3. Draw any new figures in `lib/figures.js`
-4. Only write a new exercise type if none of the eight fit
+4. Only write a new exercise type if none of the existing ones fit
+
+The book's artwork is raster at ~100 ppi, so a figure whose *answer* depends on
+its geometry cannot be read off by eye — measure it. Lesson 8 asks which angles
+exceed a right angle, and its third angle is 90° exactly, belonging to neither
+of the book's two lists; only a pixel measurement of the ray directions settled
+that. Isolate the saturated strokes (the pale arc shading skews any fit), take
+the two dominant lines, and read the angle at their intersection.
 
 ## Related
 
