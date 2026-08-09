@@ -15,7 +15,7 @@ exercises that restarts at 1**, and a block straddles page boundaries.
 | Exercise blocks in the book | **159** |
 | Total exercises | **1,101** |
 | Exercises per block | ~7 |
-| Built so far | **8** (pages 3–13) |
+| Built so far | **9** (pages 3–14) |
 
 ## Design decisions
 
@@ -33,7 +33,7 @@ exercises that restarts at 1**, and a block straddles page boundaries.
 
 `namuna` · `compute` · `fill-blank` · `word-problem` · `neighbours` ·
 `choice` · `count-figures` · `self-check` · `match-pairs` · `order` ·
-`shapes-sides` · `classify-angles`
+`shapes-sides` · `classify-angles` · `compare`
 
 Each is a self-contained renderer, so further lessons are pure JSON in
 `lib/lessons.js`. Types repeat heavily after the first dozen lessons.
