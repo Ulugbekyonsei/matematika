@@ -15,7 +15,7 @@ exercises that restarts at 1**, and a block straddles page boundaries.
 | Exercise blocks in the book | **159** |
 | Total exercises | **1,101** |
 | Exercises per block | ~7 |
-| Built so far | **6** (pages 3–10) |
+| Built so far | **7** (pages 3–11) |
 
 ## Design decisions
 
